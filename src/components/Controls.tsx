@@ -7,6 +7,9 @@ interface ControlsProps {
   hasGeometry: boolean;
   threshold: number;
   onThresholdChange: (threshold: number) => void;
+  invertColors: boolean;
+  onInvertColorsChange: (invert: boolean) => void;
+  isSvg: boolean;
 }
 
 export function Controls({
@@ -15,7 +18,10 @@ export function Controls({
   onExport,
   hasGeometry,
   threshold,
-  onThresholdChange
+  onThresholdChange,
+  invertColors,
+  onInvertColorsChange,
+  isSvg
 }: ControlsProps) {
 
   const handleParamChange = (key: keyof CookieCutterParams, value: number) => {
@@ -26,19 +32,51 @@ export function Controls({
     <div className="controls">
       <h3>Cookie Cutter Settings</h3>
 
+      {!isSvg && (
+        <>
+          <div className="control-group">
+            <label>
+              <span className="label-text">Image Threshold</span>
+              <span className="label-value">{threshold}</span>
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="255"
+              value={threshold}
+              onChange={(e) => onThresholdChange(Number(e.target.value))}
+            />
+            <p className="control-hint">Adjust to capture more or less of the image</p>
+          </div>
+
+          <div className="control-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={invertColors}
+                onChange={(e) => onInvertColorsChange(e.target.checked)}
+              />
+              <span className="label-text">Invert colors</span>
+            </label>
+            <p className="control-hint">Enable for light shapes on dark backgrounds</p>
+          </div>
+        </>
+      )}
+
       <div className="control-group">
         <label>
-          <span className="label-text">Image Threshold</span>
-          <span className="label-value">{threshold}</span>
+          <span className="label-text">Size (longest side)</span>
+          <span className="label-value">{params.size} mm</span>
         </label>
         <input
           type="range"
-          min="1"
-          max="255"
-          value={threshold}
-          onChange={(e) => onThresholdChange(Number(e.target.value))}
+          min="30"
+          max="150"
+          step="5"
+          value={params.size}
+          onChange={(e) => handleParamChange('size', Number(e.target.value))}
         />
-        <p className="control-hint">Adjust to capture more or less of the image</p>
+        <p className="control-hint">Final size of the cookie cutter</p>
       </div>
 
       <div className="control-group">

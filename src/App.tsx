@@ -12,7 +12,8 @@ const DEFAULT_PARAMS: CookieCutterParams = {
   height: 15,
   bladeThickness: 0.8,
   topThickness: 2.5,
-  bladeHeight: 5
+  bladeHeight: 5,
+  size: 80
 };
 
 function App() {
@@ -21,10 +22,11 @@ function App() {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
   const [params, setParams] = useState<CookieCutterParams>(DEFAULT_PARAMS);
   const [threshold, setThreshold] = useState(128);
+  const [invertColors, setInvertColors] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Process image when file or threshold changes
+  // Process image when file, threshold, or invert mode changes
   useEffect(() => {
     if (!file) return;
 
@@ -38,11 +40,11 @@ function App() {
         if (file.type === 'image/svg+xml') {
           extractedContours = await svgToContours(file);
         } else {
-          extractedContours = await imageToContours(file, threshold);
+          extractedContours = await imageToContours(file, threshold, invertColors);
         }
 
         if (extractedContours.length === 0) {
-          throw new Error('No shapes found in the image. Try adjusting the threshold.');
+          throw new Error('No shapes found in the image. Try adjusting the threshold or inverting colors.');
         }
 
         setContours(extractedContours);
@@ -55,7 +57,7 @@ function App() {
     };
 
     processImage();
-  }, [file, threshold]);
+  }, [file, threshold, invertColors]);
 
   // Generate geometry when contours or params change
   useEffect(() => {
@@ -108,6 +110,9 @@ function App() {
               hasGeometry={geometry !== null}
               threshold={threshold}
               onThresholdChange={setThreshold}
+              invertColors={invertColors}
+              onInvertColorsChange={setInvertColors}
+              isSvg={file.type === 'image/svg+xml'}
             />
           )}
         </aside>

@@ -6,13 +6,15 @@ export interface CookieCutterParams {
   bladeThickness: number;  // Thickness at cutting edge in mm (default: 0.8)
   topThickness: number;    // Thickness at top in mm (default: 2.5)
   bladeHeight: number;     // Height of the thin cutting portion in mm (default: 5)
+  size: number;            // Target size (longest dimension) in mm (default: 80)
 }
 
 const DEFAULT_PARAMS: CookieCutterParams = {
   height: 15,
   bladeThickness: 0.8,
   topThickness: 2.5,
-  bladeHeight: 5
+  bladeHeight: 5,
+  size: 80
 };
 
 /**
@@ -34,16 +36,31 @@ export function createCookieCutterGeometry(
     throw new Error('No valid contours found');
   }
 
+  // Scale factor: contours are normalized to 100mm, scale to target size
+  const scaleFactor = p.size / 100;
+
+  // Scale the contours to the target size
+  const scaleContour = (contour: Contour): Contour => ({
+    ...contour,
+    points: contour.points.map(pt => ({
+      x: pt.x * scaleFactor,
+      y: pt.y * scaleFactor
+    }))
+  });
+
+  const scaledOuterContours = outerContours.map(scaleContour);
+  const scaledHoleContours = holeContours.map(scaleContour);
+
   const geometries: THREE.BufferGeometry[] = [];
 
   // Create wall geometry for each outer contour
-  for (const contour of outerContours) {
+  for (const contour of scaledOuterContours) {
     const wallGeom = createWallGeometry(contour.points, p);
     geometries.push(wallGeom);
   }
 
   // Create wall geometry for holes (inner cutouts)
-  for (const hole of holeContours) {
+  for (const hole of scaledHoleContours) {
     const wallGeom = createWallGeometry(hole.points, p);
     geometries.push(wallGeom);
   }

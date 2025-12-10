@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 
 interface ImageUploaderProps {
-  onImageLoad: (file: File, previewUrl: string) => void;
+  onImageLoad: (file: File) => void;
 }
 
 export function ImageUploader({ onImageLoad }: ImageUploaderProps) {
@@ -18,7 +18,7 @@ export function ImageUploader({ onImageLoad }: ImageUploaderProps) {
 
     const url = URL.createObjectURL(file);
     setPreview(url);
-    onImageLoad(file, url);
+    onImageLoad(file);
   }, [onImageLoad]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {

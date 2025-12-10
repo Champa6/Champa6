@@ -13,10 +13,11 @@ export interface Contour {
  */
 export async function imageToContours(
   imageSource: string | File,
-  threshold: number = 128
+  threshold: number = 128,
+  invertColors: boolean = false
 ): Promise<Contour[]> {
   const imageData = await loadImageData(imageSource);
-  const binaryImage = toBinaryImage(imageData, threshold);
+  const binaryImage = toBinaryImage(imageData, threshold, invertColors);
   const contours = marchingSquares(binaryImage, imageData.width, imageData.height);
 
   // Simplify and normalize contours
@@ -53,7 +54,7 @@ async function loadImageData(source: string | File): Promise<ImageData> {
   });
 }
 
-function toBinaryImage(imageData: ImageData, threshold: number): Uint8Array {
+function toBinaryImage(imageData: ImageData, threshold: number, invertColors: boolean = false): Uint8Array {
   const { data, width, height } = imageData;
   const binary = new Uint8Array(width * height);
 
@@ -63,9 +64,11 @@ function toBinaryImage(imageData: ImageData, threshold: number): Uint8Array {
     const b = data[i * 4 + 2];
     const a = data[i * 4 + 3];
 
-    // Consider pixel as "filled" if it's dark enough and opaque enough
+    // Consider pixel as "filled" based on brightness and opacity
     const brightness = (r + g + b) / 3;
-    const isFilled = a > 128 && brightness < threshold;
+    // Normal mode: dark pixels are filled (for dark shapes on light background)
+    // Inverted mode: light pixels are filled (for light shapes on dark background)
+    const isFilled = a > 128 && (invertColors ? brightness >= threshold : brightness < threshold);
     binary[i] = isFilled ? 1 : 0;
   }
 
